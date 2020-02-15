@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-with-pvc-and-configmap-volumes
+spec:
+  volumes:
+    - name: pv-storage-example
+      persistentVolumeClaim:
+        claimName: pv-claim
+    - name: nginx-configmap
+      configMap:
+        name: my-configmap-from-literal-keys
+  containers:
+    - name: task-pv-container
+      image: nginx
+      ports:
+        - containerPort: 80
+          name: "http-server"
+      volumeMounts:
+        - mountPath: "/usr/share/nginx/html"
+          name: pv-storage-example
+        - mountPath: "/etc/config"
+          name: nginx-configmap
