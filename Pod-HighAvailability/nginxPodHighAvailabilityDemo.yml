@@ -1,0 +1,81 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: "nginx-ha"
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: nginx-ha-serviceaccount
+  namespace: "nginx-ha"
+  labels:
+    app: nginx-ha
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: nginx-ha-clusterrole
+  namespace: "nginx-ha"
+  labels:
+    app: nginx-ha
+rules:
+  - apiGroups: [""]
+    resources: ["endpoints"]
+    verbs: ["*"]
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: nginx-ha-clusterrolebinding
+  labels:
+    app: nginx-ha
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: nginx-ha-clusterrole
+subjects:
+  - name: nginx-ha-serviceaccount
+    namespace: "nginx-ha"
+    kind: ServiceAccount
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-ha
+  namespace: "nginx-ha"
+  labels:
+    app: nginx-ha
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+        app: nginx-ha
+  template:
+    metadata:
+        labels:
+            app: nginx-ha
+    spec:
+        serviceAccountName: nginx-ha-serviceaccount
+        containers:
+            - name: nginx-ha-container
+              image: nginx
+              ports:
+              - containerPort: 80
+              lifecycle:
+                postStart:
+                    exec:
+                        command: ["sh", "-c", "apt-get update; apt-get install -y curl;"]
+              readinessProbe:
+                exec:
+                    command: ["/bin/sh", "-c", "curl -v --silent http://localhost:4040/ 2>&1 | grep $HOSTNAME "]
+                initialDelaySeconds: 5
+                periodSeconds: 5
+            - name: leader-election-container
+              image: "k8s.gcr.io/leader-elector:0.5"
+              args:
+              - --election=example
+              - --http=0.0.0.0:4040
+              imagePullPolicy: IfNotPresent
+              ports:
+              - containerPort: 4040
