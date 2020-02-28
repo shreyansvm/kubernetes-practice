@@ -1,7 +1,8 @@
 # Security Considerations for K8s-based microservices infrastructure 
 
 Table of contents:
-
+- [Using Docker] (https://github.com/shreyansvm/kubernetes-practice/blob/master/security-considerations/README.md#when-using-docker)
+- [Master to Cluster communication] (https://github.com/shreyansvm/kubernetes-practice/blob/master/security-considerations/README.md#master-to-cluster-commnication)
 
 ## When using Docker
 
