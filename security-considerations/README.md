@@ -1,5 +1,8 @@
 # Security Considerations for K8s-based microservices infrastructure 
 
+Table of contents:
+
+
 ## When using Docker
 
 ### Use Certified Docker Image
@@ -60,6 +63,28 @@ docker run -dit --restart unless-stopped redis
 
 # Default: '--restart no' i.e. Do not automatically restart the container
 ```
+
+## Cluster to Master communication
+All communication from cluster to Master node communication only happens with ApiServer on HTTPS(443) and is secure. 
+Therefore this can run on un-trusted or public networks and still work fine. 
+
+## Master to Cluster commnication
+This can be divided into two - **ApiServer to Kubelet** and **ApiServer to nodes/pods/services**
+1. **ApiServer to Kubelet running on each Worker nodes**
+The connections from the apiserver to the kubelet are used for: Fetching logs for pods, Attaching (through kubectl) to running pods and Providing the kubelet’s port-forwarding functionality
+By default, this communication is not safe because ApiServer doesn't verify Kubelet serving certificates and are therefore susceptible to man-in-the-middle attack.  Don't run on untrusted or public network. 
+To harden use -
+     - set '-kubelet-certificate-authority' flag
+     - use SSH tunnelling
+
+2. **ApiServer to nodes/pods/services**
+The connections from the apiserver to a node, pod, or service default to plain HTTP connections and are therefore neither authenticated nor encrypted.
+To harden use -
+     - They can be run over a secure HTTPS connection by prefixing https: to the node, pod, or service name in the API URL, but they will not validate the certificate provided by the HTTPS endpoint nor provide client credentials so while the connection will be encrypted, it will not provide any guarantees of integrity. 
+     - Like public clouds such as GKE on GCP, use SSH tunnels. 
+
+
+
 
 ## Acknowledgments
 * https://medium.com/@IODCloudTech/5-tips-for-securing-your-docker-based-infrastructure-91e6a1bbc20c
