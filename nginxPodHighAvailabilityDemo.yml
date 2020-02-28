@@ -74,7 +74,7 @@ spec:
             - name: leader-election-container
               image: "k8s.gcr.io/leader-elector:0.5"
               args:
-              - --election=dummyendpoint
+              - --election=example
               - --http=0.0.0.0:4040
               imagePullPolicy: IfNotPresent
               ports:
