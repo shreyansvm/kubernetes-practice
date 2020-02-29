@@ -1,0 +1,43 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: my-credentials
+data:
+  username: YWRtaW4K
+  password: cGFzc3dkCg==
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: env-variables
+data:
+  env_global.conf: |+
+    name: k8s-company
+    product: new-k8s
+    # this gets auto populated using: kubectl create configmap env-variables --dry-run --from-file=env_global.conf --output yaml | tee configmap_from_file.yaml
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-with-configmap
+  labels:
+    app: nginx-with-configmap
+spec:
+  volumes:
+    - name: my-credentials-configmap
+      configMap:
+        name: my-credentials
+  containers:
+    - name: nginx-container-with-configmap
+      image: nginx
+      volumeMounts:
+        - mountPath: /tmp/
+          name: my-credentials-configmap
+      ports:
+        - containerPort: 80
+          name: http-server
+        - containerPort: 443
+          name: https-server
+      envFrom:
+        - configMapRef:
+            name: env-variables

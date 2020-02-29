@@ -1,0 +1,9 @@
+apiVersion: v1
+data:
+  env_global.conf: |
+    name: k8s-company
+    product: new-k8s
+kind: ConfigMap
+metadata:
+  creationTimestamp: null
+  name: env-variables
