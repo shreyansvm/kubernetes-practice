@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: taints-n-toleration-example-1
+  # a Node is tainted using : kubectl taint nodes gke-k8s-cluster-default-pool-8cfb3581-zgf7 env=dev:NoSchedule
+  # this Pod will get scheduled nodes other than the tainted node
+  labels:
+    env: test
+    app: fastpath_pod
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      env: test
+      app: fastpath_pod
+  template:
+    metadata:
+      labels:
+        env: test
+        app: fastpath_pod
+    spec:
+      containers:
+      - name: lifecycle-container
+        image: nginx
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: taints-n-toleration-example-2
+  # a Node is tainted using : kubectl taint nodes gke-k8s-cluster-default-pool-8cfb3581-zgf7 env=dev:NoSchedule
+  # this Pod will get scheduled on tainted node because of toleration described below
+  labels:
+    env: dev
+    app: fastpath_pod
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      env: dev
+      app: fastpath_pod
+  template:
+    metadata:
+      labels:
+        env: dev
+        app: fastpath_pod
+    spec:
+      containers:
+      - name: lifecycle-container
+        image: nginx
+      tolerations:
+      # Using this, we are telling the K8s control plan that this Pod has toleration for the node with taint 'env=dev:NoSchedule'
+      - key: "env"
+        operator: "Equal"
+        value: "dev"
+        effect: "NoSchedule"
+---
+

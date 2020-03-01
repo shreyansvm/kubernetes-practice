@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nodeselector-example
+  labels:
+    app: fastpath_pod
+spec:
+  containers:
+  - name: lifecycle-container
+    image: nginx
+  nodeSelector:
+    my_nic_type: fastpath
