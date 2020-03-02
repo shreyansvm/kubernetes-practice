@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: init-container-example
+spec:
+  volumes:
+    - name: work-directory
+      emptyDir: {}
+  containers:
+  - name: nginx-container
+    image: nginx
+    ports:
+      - containerPort: 80
+        name: http
+    volumeMounts:
+      - name: work-directory
+        mountPath: "/usr/share/nginx/html"
+  # Run during Pod initialization
+  # until initContainers are executed, the Pod is not ready
+  # This init container installs busybox, uses wget to copy contents of K8s.io website at the /work-dir/index.html location
+  initContainers:
+    - name: init-container-1
+      image: busybox
+      command:
+      - wget
+      - "-O"
+      - "/work-dir/index.html"
+      - http://kubernetes.io
+      volumeMounts:
+      - name: work-directory
+        mountPath: "/work-dir"
+    - name: init-container-2
+      image: busybox
+      # will write the following echo message to the /my-logs/init-logs.txt file.
+      # This /my-logs/ directory is also mounted at location specified by the main nginx-container i.e. /usr/share/nginx/html/ directory
+      command: ["/bin/sh", "-c", "echo Hello World from init-container-2 > /my-logs/init-logs.txt"]
+      volumeMounts:
+      - name: work-directory
+        mountPath: "/my-logs/"
