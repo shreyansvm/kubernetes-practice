@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: liveness-example
+  # livenessProbe acts like a health check. 
+  # If the probe is successful, the container is alive. If not, restart the container as per the RestartPolicy
+spec:
+  containers:
+  - name: busybox-container
+    image: busybox
+    # when the busybox-container starts, it executes :-
+    command: ["/bin/sh", "-c", "touch /tmp/healthy; sleep 30; rm -rf /tmp/healthy; sleep 600"]
+    livenessProbe:
+      # If the command succeeds, it returns 0, and the kubelet considers the Container to be alive and healthy. 
+      # If the command returns a non-zero value, the kubelet kills the Container and restarts it.
+      exec:
+        command: ["cat /tmp/healthy"]
+      # wait 5 second before performing the first probe
+      initialDelaySeconds: 5
+      # specifies kubelet should perform a liveness probe every 5 seconds
+      periodSeconds: 5
