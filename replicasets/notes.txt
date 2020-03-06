@@ -1,0 +1,23 @@
+# Delete a replicaset and all its Pods
+kubectl delete pods --all
+#   This will delete replicaset and all Pods governed by it
+kubectl delete rs/frontend-replicaset-example
+
+# Delete just a ReplicaSet but not its Pods
+kubectl delete rs/frontend-replicaset-example --cascade=false
+    # This will orphan its Pods and are now vulnerable to crash
+    # you can create a new ReplicaSet with same labels as pervious. 
+    #   This new replicaset will adopt Pods from older replicaset.
+
+# Isolating Pods from the ReplicaSet
+#   just change the selector from the ReplicaSet spec. 
+#   After edit, the pod will no longer be part of the Replicaset as the selector spec of the replicaset doesn't match the Pod's new labels. 
+#   To maintain the Desired state i.e. defined by 'replicas' spec, the ReplicaSet will fire another Pod. 
+
+# Scale a ReplicaSet
+#   Just update the replicas spec in the yaml file and apply this change
+#   This is not auto scaling as you have manually changed the replicas config.
+
+
+# auto-scaling using replicaset (using HorizontalPodAutoscaler)
+#   specify target replicaset

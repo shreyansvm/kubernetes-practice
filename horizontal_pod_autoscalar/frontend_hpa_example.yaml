@@ -1,0 +1,77 @@
+# the Horizontal Pod Autoscaler controller operates on the ratio between desired metric value and current metric value:
+#       desiredReplicas = ceil[currentReplicas * ( currentMetricValue / desiredMetricValue )]
+#
+# The HorizontalPodAutoscaler normally fetches metrics from a series of aggregated APIs (metrics.k8s.io, custom.metrics.k8s.io, and external.metrics.k8s.io). The metrics.k8s.io API is usually provided by metrics-server, which needs to be launched separately.
+### Install metrics server on GCP
+# cd my_utilities/
+# git clone https://github.com/kubernetes-incubator/metrics-server.git
+# cd metrics-server
+# kubectl apply -f deploy/kubernetes/
+#
+# Good practice to use :
+#   --horizontal-pod-autoscaler-downscale-stabilization
+#      Its a duration that specifies how long the autoscaler has to wait before another downscale operation can be performed after the current one has completed. The default value is 5 minutes (5m0s)
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: frontend-replicaset-example
+  labels:
+    app: guestbook
+    tier: frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      tier: frontend
+    matchExpressions:
+      - {key: tier, operator: In, values: [frontend]}
+  template:
+    metadata:
+      labels:
+        app: guestbook
+        tier: frontend
+    spec:
+      containers:
+        - name: php-redis
+          image: gcr.io/google-samples/gb-frontend:v4
+          ports:
+          - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-service
+  labels:
+    app: guestbook
+    tier: frontend
+spec:
+  selector:
+    tier: frontend
+  ports:
+  - port: 80  
+---
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: frontend-hpa-example
+  labels:
+    tier: frontend
+    app: guestbook
+spec: 
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: ReplicaSet
+    name: frontend-replicaset-example
+  # lower limit for the number of pods that can be set by the autoscaler, default 1
+  minReplicas: 1
+  # upper limit for the number of pods that can be set by the autoscaler, cannot be smaller than MinReplicas.
+  maxReplicas: 5
+  # HPA will increase and decrease the number of replicas (via the ReplicaSet in this case ) to maintain an average CPU utilization across all Pods of 50%
+  targetCPUUtilizationPercentage: 50
+
+# kubectl run --generator=run-pod/v1 -it --rm load-generator --image=busybox /bin/sh
+###   Hit enter for command prompt
+# while true; do wget -q -O- http://frontend-service.default.svc.cluster.local; done
+### Within a minute or so, we should see the higher CPU load by executing:
+# kubectl get hpa
+### As the CPU consumption goes up, the HPA will spawn more Pods to make sure the target CPU of 50% (as mentioned in the HPA spec) is maintained
