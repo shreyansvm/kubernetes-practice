@@ -1,0 +1,27 @@
+# This example requires atleast 2 node Cluster
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  name: example-fluentd-daemonset
+  labels:
+    app: fluentd
+spec:
+  selector:
+    matchLabels:
+      app: fluentd
+      type: daemonset-pods
+  template:
+    metadata:
+      labels:
+        app: fluentd
+        type: daemonset-pods
+    spec:
+      containers:
+        - name: fluentd-elasticsearch
+          image: quay.io/fluentd_elasticsearch/fluentd:v2.5.2
+      tolerations:
+      # a Node is already tainted using : kubectl taint nodes <node> env=dev:NoSchedule
+      - key: "dev"
+        operator: "Equal"
+        value: "dev"
+        effect: "NoSchedule"
