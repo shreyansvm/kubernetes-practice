@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: Service
+metadata:
+  # this Headless Service, is used to control the network domain
+  # Note: Headless Services are used when you don’t need load-balancing and a single Service IP. 
+  # https://kubernetes.io/docs/concepts/services-networking/service/#headless-services
+  name: statefulset-nginx
+  labels:
+    app: statefulset-nginx
+spec:
+  ports:
+  - port: 80
+    name: web
+  clusterIP: None
+  selector:
+    # These labels should match the pod selector labels defined in the StatefulSet definition yaml
+    app: statefulset-nginx
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: example-nginx-statefulset
+spec:
+  # Specify the headless service created above.
+  serviceName: "statefulset-nginx"
+  replicas: 3
+  selector:
+    matchLabels:
+      app: statefulset-nginx
+  template:
+    metadata:
+      labels:
+        app: statefulset-nginx
+    spec:
+      containers:
+      - name: nginx-container
+        image: nginx

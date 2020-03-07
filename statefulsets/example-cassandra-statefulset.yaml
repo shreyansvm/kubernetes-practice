@@ -1,0 +1,77 @@
+# ### Note: This manifest file is NOT RUNNING as expected. ### ###
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: general-storageclass
+  labels:
+    type: general
+provisioner: kubernetes.io/no-provisioner
+volumeBindingMode: WaitForFirstConsumer
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-volume-hostpath-general-storageclass
+  labels:
+    type: local
+spec:
+  storageClassName: general-storageclass
+  capacity:
+    storage: 5M
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/data"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pv-claim-general-storageclass
+spec:
+  storageClassName: general-storageclass
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2M
+---
+apiVersion: v1
+kind: Service
+metadata:
+  # this Headless Service, is used to control the network domain
+  # Note: Headless Services are used when you don’t need load-balancing and a single Service IP. 
+  # https://kubernetes.io/docs/concepts/services-networking/service/#headless-services
+  name: statefulset-cassandra
+  labels:
+    app: statefulset-cassandra
+spec:
+  ports:
+  - port: 9042
+    name: cassandra-port
+  clusterIP: None
+  selector:
+    # These labels should match the pod selector labels defined in the StatefulSet definition yaml
+    app: statefulset-cassandra
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: example-cassandra-statefulset
+spec:
+  # Specify the headless service created above.
+  serviceName: "statefulset-cassandra"
+  replicas: 3
+  selector:
+    matchLabels:
+      app: statefulset-cassandra
+  template:
+    metadata:
+      labels:
+        app: statefulset-cassandra
+    spec:
+      containers:
+      - name: cassandra-container
+        image: gcr.io/google-samples/cassandra:v13
+        ports:
+        - containerPort: 9042
+          name: cassandra-port
