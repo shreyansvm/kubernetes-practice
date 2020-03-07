@@ -47,10 +47,14 @@ replicaset.apps/example-nginx-deployment-869df76898   3         3         3     
 shreyans_mulkutkar@cloudshell:~/my_utilities/deployments (smulkutk-project-1)$
 ```
 
-Note: Scaling the deployment cannot be rolled-back i.e. revision will not get updated.
-Only changes to Pod template will trigger a new revision and later can be rolled back
-Changed image from 'nginx' to 'nginx:1.17'. Deployment updates revision. 
+Note: 
+- Scaling the deployment cannot be rolled-back i.e. revision will not get updated.
+- Only changes to Pod template will trigger a new revision and later can be rolled back
+
+Change image from 'nginx' to 'nginx:1.17'. Deployment updates revision. 
+
 Note: this could be done using editing YAML file or using 'kubectl set image deployment/example-nginx-deployment nginx=nginx:1.17'
+
 ```
 shreyans_mulkutkar@cloudshell:~/my_utilities/deployments (smulkutk-project-1)$ kubectl apply -f example_nginx_deployment_v2.yaml --record
 deployment.apps/example-nginx-deployment configured
@@ -177,7 +181,7 @@ example-nginx-deployment   4/4     4            4           27m
 ```
 ### Scaling deployment using HorizontalPodAutoscalar (HPA)
 Example -
-'''
+```
 kubectl autoscale deployment example-nginx-deployment --min=3 --max=6 --cpu-percent=50
 
 shreyans_mulkutkar@cloudshell:~/my_utilities/deployments (smulkutk-project-1)$ kubectl get all
@@ -219,10 +223,11 @@ Max replicas:             6
 Deployment pods:          4 current / 4 desired
 Events:                   <none>
 shreyans_mulkutkar@cloudshell:~/my_utilities/deployments (smulkutk-project-1)$
-'''
+  
+```
 
 ### Proportional Scaling
-During rolling deployments i.e. while transitioning into new revision, there will be Pods in both Old and New version.
-We could use Proportional Scaling option to scale Pods in both Replicaset.
-For more details visit: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#proportional-scaling
+- During rolling deployments i.e. while transitioning into new revision, there will be Pods in both Old and New version.
+- We could use Proportional Scaling option to scale Pods in both Replicaset.
+- For more details visit: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#proportional-scaling
 
