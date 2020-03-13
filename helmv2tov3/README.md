@@ -658,16 +658,16 @@ shreyans_mulkutkar@cloudshell:~/my_utilities/helmv2 (smulkutk-project-1)$
 ```
 
 ## More on changes in Helm v3 commands
-a.	init - installs Tiller and sets up local configuration has been removed.
-b.	delete to delete a release from K8s has been replaced by ‘uninstall’ 
-c.	fetch to download a chart to your local directory has been replaced by ‘pull’
-d.	home has been removed.
-e.	install: requires release name or --generate-name argument
-f.	inspect to show a Chart is replaced by ‘show’
-g.	serve has been removed.
-h.	template: -x/--execute argument renamed to -s/--show-only
-i.	upgrade: Added argument --history-max which limits the maximum number of revisions saved per release.
-j.	reset to uninstalled Tiller and optioanlly delete local configuration has been removed.
+- init - installs Tiller and sets up local configuration has been removed.
+- delete to delete a release from K8s has been replaced by ‘uninstall’ 
+- fetch to download a chart to your local directory has been replaced by ‘pull’
+- home has been removed.
+- install: requires release name or --generate-name argument
+- inspect to show a Chart is replaced by ‘show’
+- serve has been removed.
+- template: -x/--execute argument renamed to -s/--show-only
+- upgrade: Added argument --history-max which limits the maximum number of revisions saved per release.
+- reset to uninstalled Tiller and optioanlly delete local configuration has been removed.
 
 ## References:
 - https://helm.sh/docs/topics/v2_v3_migration/
