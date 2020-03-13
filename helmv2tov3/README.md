@@ -558,7 +558,120 @@ replicaset.apps/nginx-deploy-example-78c668d7fb   3         3         3       23
 shreyans_mulkutkar@cloudshell:~/.helm (smulkutk-project-1)$
 ```
 
+### After Helm2 is deleted and only Helm 3 is managing K8s packages, Helm3 can still take v2 charts
+Note: This is not in sync/in sequence with above step. This was tried much later and added here for reference.
+After 'helm 2to3 cleanup', helm2 is cleaned. The release is shown under helm3. 
+```
+shreyans_mulkutkar@cloudshell:~/my_utilities/helmv2tov3 (smulkutk-project-1)$ helm2 list                                                  
+Error: could not find tiller
+shreyans_mulkutkar@cloudshell:~/my_utilities/helmv2tov3 (smulkutk-project-1)$
+
+shreyans_mulkutkar@cloudshell:~/my_utilities/helmv2tov3 (smulkutk-project-1)$ helm3 list                                                  
+NAME            NAMESPACE       REVISION        UPDATED                                 STATUS          CHART                   APP VERSION
+ardent-wolf     default         5               2020-03-13 01:40:19.041114224 +0000 UTC deployed        helm_example-0.1.0      1.0
+ 
+shreyans_mulkutkar@cloudshell:~/my_utilities/helmv2tov3 (smulkutk-project-1)$
+
+shreyans_mulkutkar@cloudshell:~/my_utilities/helmv2tov3 (smulkutk-project-1)$ kubectl get deploy,pod
+NAME                                         READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.extensions/nginx-deploy-example   3/3     3            3           9m33s
+
+NAME                                        READY   STATUS    RESTARTS   AGE
+pod/nginx-deploy-example-78c668d7fb-9nvpj   1/1     Running   0          9m33s
+pod/nginx-deploy-example-78c668d7fb-p2ntw   1/1     Running   0          9m33s
+pod/nginx-deploy-example-78c668d7fb-xk7sb   1/1     Running   0          9m33s
+shreyans_mulkutkar@cloudshell:~/my_utilities/helmv2tov3 (smulkutk-project-1)$
+```
+
+Before modifying v2 charts.yaml and values.yaml
+```
+shreyans_mulkutkar@cloudshell:~/my_utilities/helmv2 (smulkutk-project-1)$ cd helm_example/
+
+shreyans_mulkutkar@cloudshell:~/my_utilities/helmv2/helm_example (smulkutk-project-1)$ cat values.yaml | grep replicaCount
+replicaCount: 5
+shreyans_mulkutkar@cloudshell:~/my_utilities/helmv2/helm_example (smulkutk-project-1)$
+
+shreyans_mulkutkar@cloudshell:~/my_utilities/helmv2/helm_example (smulkutk-project-1)$ cat Chart.yaml | grep apiVersion
+apiVersion: v1
+shreyans_mulkutkar@cloudshell:~/my_utilities/helmv2/helm_example (smulkutk-project-1)$
+
+shreyans_mulkutkar@cloudshell:~/my_utilities/helmv2/helm_example (smulkutk-project-1)$ cat Chart.yaml | grep version
+version: 0.2.0
+shreyans_mulkutkar@cloudshell:~/my_utilities/helmv2/helm_example (smulkutk-project-1)$
+```
+
+After modifying v2 charts.yaml and values.yaml to make replicaCount=7 and charts version to 0.3.0
+```
+shreyans_mulkutkar@cloudshell:~/my_utilities/helmv2/helm_example (smulkutk-project-1)$ cat values.yaml | grep replicaCount
+replicaCount: 7
+shreyans_mulkutkar@cloudshell:~/my_utilities/helmv2/helm_example (smulkutk-project-1)$
+ 
+shreyans_mulkutkar@cloudshell:~/my_utilities/helmv2/helm_example (smulkutk-project-1)$ cat Chart.yaml | grep version
+version: 0.3.0
+shreyans_mulkutkar@cloudshell:~/my_utilities/helmv2/helm_example (smulkutk-project-1)$
+
+shreyans_mulkutkar@cloudshell:~/my_utilities/helmv2/helm_example (smulkutk-project-1)$ cat Chart.yaml | grep apiVersion
+apiVersion: v1
+shreyans_mulkutkar@cloudshell:~/my_utilities/helmv2/helm_example (smulkutk-project-1)$
+```
+
+Try upgrading the current release with values from new values.yaml file and package folder.
+```
+shreyans_mulkutkar@cloudshell:~/my_utilities/helmv2 (smulkutk-project-1)$ helm list
+NAME            NAMESPACE       REVISION        UPDATED                                 STATUS          CHART                   APP VERSION
+ardent-wolf     default         5               2020-03-13 01:40:19.041114224 +0000 UTC deployed        helm_example-0.1.0      1.0        
+shreyans_mulkutkar@cloudshell:~/my_utilities/helmv2 (smulkutk-project-1)$
+
+shreyans_mulkutkar@cloudshell:~/my_utilities/helmv2 (smulkutk-project-1)$ helm upgrade -f helm_example/values.yaml ardent-wolf helm_example/
+Release "ardent-wolf" has been upgraded. Happy Helming!
+NAME: ardent-wolf
+LAST DEPLOYED: Thu Mar 12 18:58:23 2020
+NAMESPACE: default
+STATUS: deployed
+REVISION: 6
+NOTES:
+1. Get the application URL by running these commands:
+  export POD_NAME=$(kubectl get pods --namespace default -l "app.kubernetes.io/name=helm_example,app.kubernetes.io/instance=ardent-wolf" -o jsonpath="{.items[0].metadata.name}")
+  echo "Visit http://127.0.0.1:8080 to use your application"
+  kubectl port-forward $POD_NAME 8080:80
+shreyans_mulkutkar@cloudshell:~/my_utilities/helmv2 (smulkutk-project-1)$
+
+shreyans_mulkutkar@cloudshell:~/my_utilities/helmv2 (smulkutk-project-1)$ helm list
+NAME            NAMESPACE       REVISION        UPDATED                                 STATUS          CHART                   APP VERSION
+ardent-wolf     default         6               2020-03-12 18:58:23.082788089 -0700 PDT deployed        helm_example-0.3.0      1.0        
+shreyans_mulkutkar@cloudshell:~/my_utilities/helmv2 (smulkutk-project-1)$
+
+shreyans_mulkutkar@cloudshell:~/my_utilities/helmv2 (smulkutk-project-1)$ helm history ardent-wolf
+REVISION        UPDATED                         STATUS          CHART                   APP VERSION     DESCRIPTION
+1               Thu Mar 12 23:54:03 2020        superseded      helm_example-0.1.0      1.0             Install complete
+2               Fri Mar 13 01:04:23 2020        superseded      helm_example-0.2.0      1.0             Upgrade complete
+3               Fri Mar 13 01:11:15 2020        superseded      helm_example-0.1.0      1.0             Rollback to 1
+4               Fri Mar 13 01:15:18 2020        superseded      helm_example-0.2.0      1.0             Deletion complete
+5               Fri Mar 13 01:40:19 2020        superseded      helm_example-0.1.0      1.0             Rollback to 1
+6               Thu Mar 12 18:58:23 2020        deployed        helm_example-0.3.0      1.0             Upgrade complete
+shreyans_mulkutkar@cloudshell:~/my_utilities/helmv2 (smulkutk-project-1)$
+
+shreyans_mulkutkar@cloudshell:~/my_utilities/helmv2 (smulkutk-project-1)$ kubectl get deploy
+NAME                   READY   UP-TO-DATE   AVAILABLE   AGE
+nginx-deploy-example   7/7     7            7           19m
+shreyans_mulkutkar@cloudshell:~/my_utilities/helmv2 (smulkutk-project-1)$
+```
+
+## More on changes in Helm v3 commands
+a.	init - installs Tiller and sets up local configuration has been removed.
+b.	delete to delete a release from K8s has been replaced by ‘uninstall’ 
+c.	fetch to download a chart to your local directory has been replaced by ‘pull’
+d.	home has been removed.
+e.	install: requires release name or --generate-name argument
+f.	inspect to show a Chart is replaced by ‘show’
+g.	serve has been removed.
+h.	template: -x/--execute argument renamed to -s/--show-only
+i.	upgrade: Added argument --history-max which limits the maximum number of revisions saved per release.
+j.	reset to uninstalled Tiller and optioanlly delete local configuration has been removed.
+
 ## References:
 - https://helm.sh/docs/topics/v2_v3_migration/
 - https://github.com/helm/helm-2to3
 - https://helm.sh/blog/migrate-from-helm-v2-to-helm-v3/
+- https://developer.ibm.com/technologies/containers/blogs/kubernetes-helm-3/#release-storage-changed
+
